@@ -1,65 +1,74 @@
+import time
+import numpy as np
+import torch
 import torchvision
+import torchvision.transforms as transforms
+from torchvision.models.detection import maskrcnn_resnet50_fpn
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from torchvision import transforms as T
 
+print("PyTorch version:", torch.__version__)
+print("torchvision version:", torchvision.__version__)
 
-if __name__ == "__main__":
-    import torch
-    import torchvision.transforms as transforms
-    from torchvision.models.detection import maskrcnn_resnet50_fpn
-    from PIL import Image
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-    from torchvision import transforms as T
+# Load pre-trained Mask R-CNN model
+model = maskrcnn_resnet50_fpn(pretrained=True)
+model.eval()
+model.cuda()
 
-    print("PyTorch version:", torch.__version__)
-    print("torchvision version:", torchvision.__version__)
+for _ in range(10):
+    _ = model(torch.ones((1, 3, 512, 512)).cuda())
 
-    # Load pre-trained Mask R-CNN model
-    model = maskrcnn_resnet50_fpn(pretrained=True)
-    model.eval()
+# Define the transformation to apply to the input image
+transform = transforms.Compose(
+    [
+        transforms.ToTensor(),
+    ]
+)
 
-    # Define the transformation to apply to the input image
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-        ]
-    )
+# Load and preprocess the input image
+image_path = (
+    r"C:\Projects\maskRCNN_object_detection\.coco_dataset\images\000000001580.jpg"
+)
+image = Image.open(image_path)
+image_tensor = transform(image)
+image_tensor = image_tensor.unsqueeze(0).cuda()  # Add batch dimension
 
-    # Load and preprocess the input image
-    image_path = (
-        r"C:\Projects\maskRCNN_object_detection\.coco_dataset\images\000000001580.jpg"
-    )
-    image = Image.open(image_path)
-    image_tensor = transform(image)
-    image_tensor = image_tensor.unsqueeze(0)  # Add batch dimension
+print(image_tensor.shape)
 
-    print(image_tensor.shape)
-
-    # Perform inference
+# Perform inference
+inference_time = []
+for i in range(0, 10):
     with torch.no_grad():
+        t0 = time.time()
         predictions = model(image_tensor)
+        inference_time.append(time.time() - t0)
 
-    print("predictions[0]['boxes'].shape: ", predictions[0]["boxes"].shape)
-    print("predictions[0]['labels'].shape: ", predictions[0]["labels"].shape)
-    print("predictions[0]['masks'].shape: ", predictions[0]["masks"].shape)
+print("median inference time: ", np.median(inference_time))
 
-    # Post-process predictions
-    # For example, print predicted boxes, labels, and masks
-    boxes = predictions[0]["boxes"].numpy()
-    labels = predictions[0]["labels"].numpy()
-    masks = predictions[0]["masks"].numpy()
+print("predictions[0]['boxes'].shape: ", predictions[0]["boxes"].shape)
+print("predictions[0]['labels'].shape: ", predictions[0]["labels"].shape)
+print("predictions[0]['masks'].shape: ", predictions[0]["masks"].shape)
 
-    fig, ax = plt.subplots(1, 2, figsize=(16, 8))
-    ax[0].imshow(image)
+# Post-process predictions
+# For example, print predicted boxes, labels, and masks
+boxes = predictions[0]["boxes"].cpu().numpy()
+labels = predictions[0]["labels"].cpu().numpy()
+masks = predictions[0]["masks"].cpu().numpy()
 
-    for box, label, mask in zip(boxes, labels, masks):
-        x, y, w, h = box
-        rect = patches.Rectangle(
-            (x, y), w - x, h - y, linewidth=1, edgecolor="r", facecolor="none"
-        )
-        ax[0].add_patch(rect)
-        ax[0].text(x, y, f"Label: {label}", color="red")
-        mask = np.transpose(mask, (1, 2, 0))
-        ax[1].imshow(mask[:, :, 0], alpha=0.1, cmap="Reds")
+fig, ax = plt.subplots(1, 2, figsize=(16, 8))
+ax[0].imshow(image)
 
-    plt.show()
+for box, label, mask in zip(boxes, labels, masks):
+    x, y, w, h = box
+    rect = patches.Rectangle(
+        (x, y), w - x, h - y, linewidth=1, edgecolor="r", facecolor="none"
+    )
+    ax[0].add_patch(rect)
+    ax[0].text(x, y, f"Label: {label}", color="red")
+    mask = np.transpose(mask, (1, 2, 0))
+    ax[1].imshow(mask[:, :, 0], alpha=0.1, cmap="Reds")
+
+plt.show()
