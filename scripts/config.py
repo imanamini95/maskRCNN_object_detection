@@ -11,7 +11,7 @@ def get_train_cfg(folder_name="Test"):
 
     config.BEST_MODEL_PATH = None
 
-    config.CHECK_PATH = f"./.results/{folder_name}"
+    config.CHECK_PATH = f"/mnt-fs/efs-ml-model/Research/maskRCNN_object_detection/{folder_name}"
 
     if not os.path.isdir(config.CHECK_PATH):
         os.mkdir(config.CHECK_PATH)
@@ -28,7 +28,7 @@ def get_train_cfg(folder_name="Test"):
     config.GAMMA = 0.9
 
     # debug
-    config.DEBUG_TRAIN = True
+    config.DEBUG_TRAIN = False
 
     config.SHAPE = (512, 512)
 
@@ -50,6 +50,13 @@ def get_train_cfg(folder_name="Test"):
     config.loss_mask = 2.0
     config.loss_objectness = 1.0
     config.loss_rpn_box_reg = 5.0
+    config.total_loss_coeff = (
+        config.loss_classifier
+        + config.loss_box_reg
+        + config.loss_mask
+        + config.loss_objectness
+        + config.loss_rpn_box_reg
+    )
 
     # MAP LIST
     config.mAP_list = []

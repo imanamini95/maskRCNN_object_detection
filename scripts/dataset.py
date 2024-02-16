@@ -110,6 +110,7 @@ class COCODataset(torch.utils.data.Dataset):
         return seg_masks
 
     def __len__(self):
+        # return len(self.data["images"])
         return len(self.data["images"])
 
     def __getitem__(self, idx):

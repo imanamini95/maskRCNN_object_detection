@@ -51,8 +51,8 @@ def train_epoch(
         optimizer.step()
 
         if batch_idx == len(train_dataset) - 1:
-            model.eval()
-            for _, (x_batch, y_batch) in enumerate(val_dataset):
+            for i in range(len(val_dataset)):
+                x_batch, y_batch = val_dataset[i]
                 x_batch = x_batch.float().to(cfg.DEVICE)
                 for key, _ in y_batch.items():
                     y_batch[key] = y_batch[key].to(cfg.DEVICE)
@@ -60,7 +60,6 @@ def train_epoch(
                 with torch.no_grad():
                     loss_values = model([x_batch], [y_batch])
                     loss_val = loss_fn(loss_values, cfg)
-
                 value_loss = loss_val.item()
                 val_loss.append(value_loss)
 
@@ -68,7 +67,8 @@ def train_epoch(
                 train_loss=np.mean(mean_loss),
                 val_loss=np.mean(val_loss),
             )
-
+            break
+    
         else:
             # update progress bar
             loop.set_postfix(train_loss=np.mean(mean_loss), val_loss="TBD")
@@ -113,14 +113,14 @@ def loss_per_epoch(train_loss_list, val_loss_list, epoch, cfg):
     fig, axs = plt.subplots(1, figsize=(6, 6))
 
     # Plot loss per epoch
-    axs[0].plot(list(range(0, epoch)), train_loss_list, "b")
-    axs[0].plot(list(range(0, epoch)), val_loss_list, "r")
-    axs[0].legend(["train loss", "validation loss"])
-    axs[0].set_title("Loss per epoch")
-    axs[0].set_xlabel("Epochs")
-    axs[0].set_ylabel("Loss")
+    axs.plot(list(range(0, epoch)), train_loss_list, "b")
+    axs.plot(list(range(0, epoch)), val_loss_list, "r")
+    axs.legend(["train loss", "validation loss"])
+    axs.set_title("Loss per epoch")
+    axs.set_xlabel("Epochs")
+    axs.set_ylabel("Loss")
 
-    plt.save(cfg.CHECK_PATH + "/loss_per_epoch.png")
+    plt.savefig(cfg.CHECK_PATH + "/loss_per_epoch.png")
 
 
 def collect_samples(dataset_val):

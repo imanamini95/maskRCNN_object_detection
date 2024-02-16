@@ -58,7 +58,8 @@ def main(
     val_loss_list = []
 
     for epoch in range(train_cfg.EPOCHS):
-        model_checkpoint(model, epoch, list_samples, train_cfg)
+        if epoch % 5 == 0:
+            model_checkpoint(model, epoch, list_samples, train_cfg)
 
         if epoch != 0:
             loss_per_epoch(train_loss_list, val_loss_list, epoch, train_cfg)
@@ -80,6 +81,7 @@ def main(
 
 if __name__ == "__main__":
     # Create an ArgumentParser object
+    # screen -S Experiment1 -L -Logfile ./.screenlogs/rcnn.log python ./scripts/train.py --save_folder_name Experiment1
     parser = argparse.ArgumentParser()
 
     # Add arguments to the parser
