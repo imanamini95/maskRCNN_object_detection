@@ -29,14 +29,10 @@ transform = transforms.Compose(
 )
 
 # Load and preprocess the input image
-image_path = (
-    r"C:\Projects\maskRCNN_object_detection\.coco_dataset\images\000000001580.jpg"
-)
+image_path = r"./.debug/image.png"
 image = Image.open(image_path)
 image_tensor = transform(image)
 image_tensor = image_tensor.unsqueeze(0).cuda()  # Add batch dimension
-
-print(image_tensor.shape)
 
 # Perform inference
 inference_time = []
@@ -57,6 +53,8 @@ print("predictions[0]['masks'].shape: ", predictions[0]["masks"].shape)
 boxes = predictions[0]["boxes"].cpu().numpy()
 labels = predictions[0]["labels"].cpu().numpy()
 masks = predictions[0]["masks"].cpu().numpy()
+
+print(predictions[0]["scores"])
 
 fig, ax = plt.subplots(1, 2, figsize=(16, 8))
 ax[0].imshow(image)
